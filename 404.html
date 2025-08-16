@@ -2,17 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
     <meta name="color-scheme" content="dark" />
     <title>Shipwright Survivors — Wave Editor</title>
 
+    <!-- Use BASE_URL so it works under /shipwright-survivors-waveseditor/ -->
     <link rel="icon" href="/shipwright-survivors-waveseditor/favicon.svg" />
     <script type="module" crossorigin src="/shipwright-survivors-waveseditor/assets/index-lmeoDjs3.js"></script>
     <link rel="stylesheet" crossorigin href="/shipwright-survivors-waveseditor/assets/index-BmSD2HlS.css">
   </head>
   <body>
-    <div id="root"><noscript>This editor requires JavaScript enabled.</noscript></div>
+    <div id="root">
+      <noscript>This editor requires JavaScript enabled.</noscript>
+    </div>
 
-    <!-- Entry now points to src/main.tsx since root is project root -->
+    <!-- Vite will transform this to a hashed asset in dist -->
   </body>
 </html>
