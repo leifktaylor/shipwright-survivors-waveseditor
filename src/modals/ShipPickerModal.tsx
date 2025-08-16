@@ -109,20 +109,47 @@ export default function ShipPickerModal() {
   const [q, setQ] = useState('');
   const [gridScale, setGridScale] = useState<'md' | 'lg'>('lg'); // quick toggle between 96px and 72px tiles
 
-  // Fetch manifest once per open
+  // Fetch manifest once per open (BASE-aware + fallback path)
   useEffect(() => {
     if (!showShipPicker) return;
     let mounted = true;
+
     (async () => {
-      try {
-        const res = await fetch('/assets/ships/manifest.json', { cache: 'no-store' });
-        const j = (await res.json()) as Manifest;
-        if (mounted) setManifest(j);
-      } catch (e) {
-        console.warn('[ShipPicker] manifest error', e);
-        if (mounted) setManifest({ files: [] });
+      const base = (import.meta as any).env?.BASE_URL || '/';
+      const candidates = [
+        `${base}assets/ships/manifest.json`, // preferred (if your script outputs here)
+        `${base}assets/manifest.json`,       // fallback (matches your current tree)
+      ];
+
+      let data: Manifest | null = null;
+      let lastErr: any = null;
+
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          const ct = res.headers.get('content-type') || '';
+          if (res.ok && ct.includes('application/json')) {
+            data = await res.json();
+            break;
+          } else {
+            const text = await res.text().catch(() => '');
+            lastErr = new Error(`[ShipPicker] Manifest not JSON/OK at ${url} (status ${res.status}) :: ${text.slice(0, 120)}`);
+          }
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+
+      if (!mounted) return;
+
+      if (data) {
+        setManifest(data);
+      } else {
+        console.warn('[ShipPicker] manifest error; tried:', candidates, '\nlast error:', lastErr);
+        setManifest({ files: [] });
       }
     })();
+
     return () => { mounted = false; };
   }, [showShipPicker]);
 
@@ -155,7 +182,6 @@ export default function ShipPickerModal() {
       collect(curNode);
     }
 
-    // deterministic order
     files.sort((a, b) => a.localeCompare(b));
     return { dirs: dirList, ships: files };
   }, [curNode, q]);
@@ -167,10 +193,7 @@ export default function ShipPickerModal() {
     setShipId(shipPickerTarget.wi, shipPickerTarget.si, id);
   };
 
-  // Breadcrumb parts
   const crumbs = path.split('/').filter(Boolean);
-
-  // Visual size
   const iconSize = gridScale === 'lg' ? 96 : 72;
 
   return (
