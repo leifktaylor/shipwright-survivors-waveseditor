@@ -604,3 +604,72 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 
 .inc-grid-row { min-height: 44px; }
 .inc-grid-row .right { text-align: right; }
+
+/* ──────────────────────────────────────────────────────────
+   Modal form grid (aligned labels/fields) — fixes
+   ────────────────────────────────────────────────────────── */
+:root { --form-label-w: 130px; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: var(--form-label-w) 1fr;
+  align-items: center;
+  gap: 10px 12px; /* row-gap | col-gap */
+  min-width: 0;   /* prevent grid from growing beyond panel */
+}
+
+/* Right-align labels in the narrow column */
+.form-grid .form-label {
+  justify-self: end;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: .9;
+}
+
+/* Ensure controls don't overflow their grid cell */
+.form-grid .field,
+.form-grid .field-pair { min-width: 0; }
+
+.form-grid .field input,
+.form-grid .field select,
+.form-grid .field textarea,
+.form-grid .field-pair input,
+.form-grid .field-pair select {
+  width: 100%;
+  box-sizing: border-box; /* critical to avoid horizontal creep */
+}
+
+/* Slider + numeric pair */
+.form-grid .field-pair {
+  display: grid;
+  grid-template-columns: 1fr 90px; /* slider grows, number fixed */
+  gap: 8px;
+  align-items: center;
+}
+
+/* A separate stacked section for large editors (label above field) */
+.form-section {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0; /* allow the textarea to shrink inside the panel */
+}
+
+/* Optional: keep long JSON from expanding modal horizontally */
+.form-section .code { width: 100%; box-sizing: border-box; }
+
+/* Keep the helper and actions aligned with the content column */
+.form-help {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Footer actions aligned right */
+.form-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

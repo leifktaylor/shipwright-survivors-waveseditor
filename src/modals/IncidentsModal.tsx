@@ -1,5 +1,5 @@
 // src/modals/IncidentsModal.tsx
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '@/state/store';
 import type { WaveIncidentEntryJSON } from '@/types/WaveJSON';
 import { INCIDENT_PRESETS } from './presets';
@@ -18,7 +18,7 @@ function summarizeOptions(o: any): string {
 
 export default function IncidentsModal({ onClose }: { onClose: () => void }) {
   const {
-    doc, incidentModalTarget, closeIncidentsModal,
+    doc, incidentModalTarget,
     addIncident, updateIncident,
   } = useStore();
 
@@ -64,14 +64,14 @@ export default function IncidentsModal({ onClose }: { onClose: () => void }) {
       setDelaySeconds(existing.delaySeconds ?? '');
       setOptionsText(existing.options ? JSON.stringify(existing.options, null, 2) : '');
     } else if (!editing) {
-      // Fresh draft
       setSpawnChance(1);
       setScript('');
       setLabel('');
       setDelaySeconds('');
       setOptionsText('');
     }
-  }, [wi, ii]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wi, ii]);
 
   // Save handler: edit or insert
   function onSave() {
@@ -95,7 +95,6 @@ export default function IncidentsModal({ onClose }: { onClose: () => void }) {
     if (editing && ii != null) {
       updateIncident(wi, ii, payload);
     } else {
-      // Insert at end: compute index prior to add()
       const idx = doc.waves[wi].incidents?.length ?? 0;
       addIncident(wi);
       updateIncident(wi, idx, payload);
@@ -111,8 +110,7 @@ export default function IncidentsModal({ onClose }: { onClose: () => void }) {
     setOptionsText('');
   }
 
-  // Small helper palette for known scripts
-  const knownScripts = ['CursedCargoIncident', 'DimensionalPortalIncident'];
+  const knownScripts = ['CursedCargoIncident', 'DimensionalPortalIncident', 'QuantumBoomIncident'];
 
   return (
     <>
@@ -162,72 +160,86 @@ export default function IncidentsModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        {/* Right: Editor */}
-        <div className="panel" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div className="row" style={{ gap: 10, alignItems: 'center' }}>
-            <label>script</label>
-            <input
-              type="text"
-              list="known-scripts"
-              value={script}
-              onChange={e => setScript(e.target.value)}
-              placeholder="CursedCargoIncident"
-              style={{ width: 260 }}
-            />
-            <datalist id="known-scripts">
-              {knownScripts.map(s => <option key={s} value={s} />)}
-            </datalist>
+        {/* Right: Editor (aligned, fixed) */}
+        <div className="panel" style={{ flex: 1, minWidth: 0 }}>
+          <div className="form-grid">
+            {/* script */}
+            <label htmlFor="inc-script" className="form-label">script</label>
+            <div className="field">
+              <input
+                id="inc-script"
+                type="text"
+                list="known-scripts"
+                value={script}
+                onChange={e => setScript(e.target.value)}
+                placeholder="CursedCargoIncident"
+              />
+              <datalist id="known-scripts">
+                {knownScripts.map(s => <option key={s} value={s} />)}
+              </datalist>
+            </div>
 
-            <label>label</label>
+            {/* label */}
+            <label htmlFor="inc-label" className="form-label">label</label>
             <input
+              id="inc-label"
+              className="field"
               type="text"
               value={label}
               onChange={e => setLabel(e.target.value)}
               placeholder="(optional, UI hint)"
-              style={{ width: 220 }}
             />
 
-            <label>spawnChance</label>
-            <input
-              type="range" className="slider"
-              min={0} max={1} step={0.01}
-              value={spawnChance}
-              onChange={e => setSpawnChance(Number(e.target.value))}
-            />
-            <input
-              type="number" step={0.01}
-              value={spawnChance}
-              onChange={e => setSpawnChance(Number(e.target.value || 0))}
-              style={{ width: 90 }}
-            />
+            {/* spawnChance */}
+            <label className="form-label">spawnChance</label>
+            <div className="field-pair">
+              <input
+                type="range" className="slider"
+                min={0} max={1} step={0.01}
+                value={spawnChance}
+                onChange={e => setSpawnChance(Number(e.target.value))}
+              />
+              <input
+                type="number" step={0.01}
+                value={spawnChance}
+                onChange={e => setSpawnChance(Number(e.target.value || 0))}
+              />
+            </div>
 
-            <label>delaySeconds</label>
+            {/* delaySeconds */}
+            <label htmlFor="inc-delay" className="form-label">delaySeconds</label>
             <input
+              id="inc-delay"
+              className="field"
               type="number"
               value={delaySeconds}
               onChange={e => {
                 const v = e.target.value.trim();
                 setDelaySeconds(v === '' ? '' : Number(v));
               }}
-              style={{ width: 120 }}
             />
-
-            <div className="spacer" />
-            <button onClick={onSave}>Save</button>
           </div>
 
-          <div className="col" style={{ gap: 6, minHeight: 0, overflow: 'auto', paddingRight: 4 }}>
-            <label>options (JSON)</label>
+          {/* Options (stacked, independent of grid) */}
+          <div className="form-section">
+            <label className="form-label" style={{ justifySelf: 'start' }}>options (JSON)</label>
             <textarea
               className="code"
               placeholder='{"maxDuration": 20, "tiers": [[{"shipId":"wave_0_00","count":4}]]}'
               value={optionsText}
               onChange={e => setOptionsText(e.target.value)}
-              style={{ minHeight: 200 }}
             />
-            <div className="muted tiny">Summary: {summarizeOptions(optionsText ? (() => { try { return JSON.parse(optionsText); } catch { return null; }})() : null)}</div>
+            <div className="form-help">
+              Summary: {summarizeOptions(optionsText ? (() => { try { return JSON.parse(optionsText); } catch { return null; } })() : null)}
+            </div>
+
+            <div className="form-actions">
+              <button className="btn-ghost" type="button" onClick={onClear}>Clear</button>
+              <button type="button" onClick={onSave}>Save</button>
+            </div>
           </div>
         </div>
+
       </div>
     </>
   );

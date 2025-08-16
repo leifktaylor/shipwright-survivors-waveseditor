@@ -57,6 +57,13 @@ export const BEHAVIOR_PRESETS: Record<string, BehaviorJSON> = {
  * These are convenience templates, not persisted in WavesFileJSON.
  */
 export const INCIDENT_PRESETS: Record<string, WaveIncidentEntryJSON> = {
+
+  QUANTUM_BOOM: {
+    spawnChance: 1.0,
+    script: 'QuantumBoomIncident',
+    label: 'Quantum Boom',
+  },
+
   CURSED_CARGO_T1: {
     spawnChance: 1.0,
     script: 'CursedCargoIncident',
