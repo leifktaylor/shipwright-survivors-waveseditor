@@ -1,140 +1,138 @@
-import { useState } from 'react';
+// src/editor/IncidentsCard.tsx
+import { useMemo } from 'react';
 import { useStore } from '@/state/store';
+import type { WaveIncidentEntryJSON } from '@/types/WaveJSON';
+import { INCIDENT_PRESETS } from '@/modals/presets';
+
+function percent(n: number) { return `${Math.round((n ?? 0) * 100)}%`; }
+
+function summarizeOptions(o?: Record<string, any>): string {
+  if (!o) return '—';
+  if (o.maxDuration || Array.isArray(o.tiers))
+    return `maxDuration=${o.maxDuration ?? '—'}; tiers=${Array.isArray(o.tiers) ? o.tiers.length : 0}`;
+  if (Array.isArray(o.ships))
+    return `ships=${o.ships.length}; rewardTier=${o.rewardBlockTier ?? '—'}`;
+  return Object.keys(o).slice(0, 4).join(', ') || '—';
+}
 
 function IncidentRow({
-  wi, ii,
-  spawnChance, script, delaySeconds, options,
+  wi, ii, inc, onEdit, onDuplicate, onDelete, onDragStart, onDragOver, onDrop,
 }: {
-  wi: number; ii: number;
-  spawnChance: number; script: string; delaySeconds?: number; options?: Record<string, any>;
+  wi: number; ii: number; inc: WaveIncidentEntryJSON;
+  onEdit: () => void; onDuplicate: () => void; onDelete: () => void;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
 }) {
-  const { updateIncident, deleteIncident, duplicateIncident, reorderIncidents } = useStore();
-
-  const [text, setText] = useState(options ? JSON.stringify(options, null, 2) : '');
-
-  const onBlurParse = () => {
-    if (text.trim() === '') { updateIncident(wi, ii, { options: undefined }); return; }
-    try {
-      const parsed = JSON.parse(text);
-      updateIncident(wi, ii, { options: parsed });
-    } catch {
-      alert('Invalid JSON in options');
-    }
-  };
-
-  const onDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('text/plain', String(ii));
-    e.dataTransfer.effectAllowed = 'move';
-  };
-  const onDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const from = Number(e.dataTransfer.getData('text/plain'));
-    const to = ii;
-    if (!Number.isNaN(from) && from !== to) reorderIncidents(wi, from, to);
-  };
-
   return (
-    <div className="card" onDragOver={onDragOver} onDrop={onDrop}>
-      <div className="card-header">
-        <div className="row" style={{ gap: 8 }}>
-          <div className="handle" title="Drag to reorder" draggable onDragStart={onDragStart}>⋮</div>
-          <strong>Incident #{ii + 1}</strong>
-        </div>
-        <div className="row" style={{ gap: 8 }}>
-          <button className="btn-ghost" onClick={() => duplicateIncident(wi, ii)} title="Duplicate">⧉</button>
-          <button className="icon-btn btn-danger" onClick={() => deleteIncident(wi, ii)} title="Delete">✕</button>
-        </div>
+    <div className="inc-grid-row" onDragOver={onDragOver} onDrop={onDrop}>
+      <div className="handle" title="Drag to reorder" draggable onDragStart={onDragStart}>⋮</div>
+      <div className="right">{percent(inc.spawnChance)}</div>
+      <div className="ellipsis" title={inc.script}>{inc.script}</div>
+      <div className="ellipsis" title={inc.label || '—'}>{inc.label || '—'}</div>
+      <div className="right">{inc.delaySeconds ?? '—'}</div>
+      <div className="ellipsis" title={summarizeOptions(inc.options)}>{summarizeOptions(inc.options)}</div>
+      <div className="ship-actions">
+        <button className="btn-ghost icon-btn" title="Edit" aria-label="Edit" onClick={onEdit}>✎</button>
       </div>
-
-      <div className="row">
-        <label className="row" style={{ gap: 6 }}>
-          spawnChance
-          <input
-            type="range" className="slider"
-            min={0} max={1} step={0.01}
-            value={spawnChance}
-            onChange={e => updateIncident(wi, ii, { spawnChance: Number(e.target.value) })}
-          />
-          <input
-            type="number" step={0.01}
-            value={spawnChance}
-            onChange={e => updateIncident(wi, ii, { spawnChance: Number(e.target.value || 0) })}
-            style={{ width: 90 }}
-          />
-        </label>
-
-        <label className="row" style={{ gap: 6 }}>
-          script
-          <input
-            type="text"
-            placeholder="CursedCargoIncident"
-            value={script}
-            onChange={e => updateIncident(wi, ii, { script: e.target.value })}
-            style={{ minWidth: 220 }}
-          />
-        </label>
-
-        <label className="row" style={{ gap: 6 }}>
-          delaySeconds
-          <input
-            type="number"
-            value={delaySeconds ?? ''}
-            onChange={e => {
-              const v = e.target.value.trim();
-              updateIncident(wi, ii, { delaySeconds: v === '' ? undefined : Number(v) });
-            }}
-            style={{ width: 120 }}
-          />
-        </label>
+      <div className="ship-actions">
+        <button className="btn-ghost icon-btn" title="Duplicate" aria-label="Duplicate" onClick={onDuplicate}>⧉</button>
       </div>
-
-      <div className="col" style={{ gap: 6 }}>
-        <label>options (JSON)</label>
-        <textarea
-          className="code"
-          placeholder='{"tier": 1}'
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onBlur={onBlurParse}
-        />
+      <div className="ship-actions">
+        <button className="icon-btn btn-danger" title="Delete" aria-label="Delete" onClick={onDelete}>✕</button>
       </div>
     </div>
   );
 }
 
 export default function IncidentsCard() {
-  const { doc, selectedWaveIdx, addIncident } = useStore();
+  const {
+    doc, selectedWaveIdx, addIncident, updateIncident, deleteIncident, duplicateIncident, reorderIncidents, openIncidentsModal
+  } = useStore();
   const w = selectedWaveIdx != null ? doc.waves[selectedWaveIdx] : null;
   const wi = selectedWaveIdx ?? -1;
 
-  if (!w) return null;
+  const incidents = w?.incidents ?? [];
 
-  const incidents = w.incidents ?? [];
+  const quickAddKeys = useMemo(() => Object.keys(INCIDENT_PRESETS).slice(0, 4), []);
+
+  if (!w) return null;
 
   return (
     <div className="card">
       <div className="card-header">
         <h3>Incidents</h3>
-        <div className="row"><button onClick={() => addIncident(wi)}>+ Incident</button></div>
+        <div className="row">
+          {/* Quick add from presets */}
+          <div className="chips">
+            {quickAddKeys.map(k => (
+              <button
+                key={k}
+                className="chip"
+                title={`Add ${k}`}
+                onClick={() => {
+                  const preset = INCIDENT_PRESETS[k];
+                  const idx = (w.incidents?.length ?? 0);
+                  addIncident(wi);
+                  updateIncident(wi, idx, preset);
+                }}
+              >
+                + {k}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={() => addIncident(wi)}>+ Blank</button>
+          <button className="btn-ghost" onClick={() => openIncidentsModal(wi, null)}>Open Editor…</button>
+        </div>
+      </div>
+
+      {/* Column headers align to rows below */}
+      <div className="inc-grid-header">
+        <div className="ship-col--center">Reorder</div>
+        <div className="right">Chance</div>
+        <div>Script</div>
+        <div>Label</div>
+        <div className="right">Delay</div>
+        <div>Options Summary</div>
+        <div className="right">Edit</div>
+        <div className="right">Dup</div>
+        <div className="right">Del</div>
       </div>
 
       {/* Scrollable list */}
       <div className="card-scroll">
-        {incidents.length === 0 && <div className="muted small">No incidents. Use “+ Incident”.</div>}
+        {incidents.length === 0 && <div className="muted small">No incidents. Use “+ Blank” or a preset chip.</div>}
 
         <div className="col" style={{ gap: 10 }}>
-          {incidents.map((inc, ii) => (
-            <IncidentRow
-              key={ii}
-              wi={wi}
-              ii={ii}
-              spawnChance={inc.spawnChance}
-              script={inc.script}
-              delaySeconds={inc.delaySeconds}
-              options={inc.options}
-            />
-          ))}
+          {incidents.map((inc, ii) => {
+            const onDragStart = (e: React.DragEvent) => {
+              e.dataTransfer.setData('text/plain', String(ii));
+              e.dataTransfer.effectAllowed = 'move';
+            };
+            const onDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
+            const onDrop = (e: React.DragEvent) => {
+              e.preventDefault();
+              const from = Number(e.dataTransfer.getData('text/plain'));
+              const to = ii;
+              if (!Number.isNaN(from) && from !== to) reorderIncidents(wi, from, to);
+            };
+
+            return (
+              <IncidentRow
+                key={ii}
+                wi={wi}
+                ii={ii}
+                inc={inc}
+                onEdit={() => openIncidentsModal(wi, ii)}
+                onDuplicate={() => duplicateIncident(wi, ii)}
+                onDelete={() => deleteIncident(wi, ii)}
+                onDragStart={onDragStart}
+                onDragOver={onDragOver}
+                onDrop={onDrop}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

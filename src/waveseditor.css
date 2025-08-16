@@ -474,3 +474,133 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   .main { grid-template-columns: 1fr; }
   .shippicker-modal { min-width: 92vw; }
 }
+
+/* ──────────────────────────────────────────────────────────
+   Ships Card: Column Grid
+   - Shared template for header + rows to ensure alignment
+   - Tuned for generous spacing (we have horizontal room)
+   ────────────────────────────────────────────────────────── */
+
+:root {
+  /* Column sizing knobs (tweak to taste) */
+  --col-icon:    96px;
+  --col-drag:    28px;
+  --col-ship:    1.20fr;   /* id pill */
+  --col-count:   110px;
+  --col-hunter:  88px;
+  --col-affix:   280px;    /* select + gear */
+  --col-behav:   320px;    /* select + gear */
+  --col-flex:    1fr;      /* spacer */
+  --col-act:     32px;     /* per-action icon button */
+
+  --ship-grid-cols:
+    var(--col-icon)
+    var(--col-drag)
+    var(--col-ship)
+    var(--col-count)
+    var(--col-hunter)
+    var(--col-affix)
+    var(--col-behav)
+    var(--col-flex)
+    var(--col-act)
+    var(--col-act);
+}
+
+.ship-grid-header,
+.ship-grid-row {
+  display: grid;
+  grid-template-columns: var(--ship-grid-cols);
+  align-items: center;
+  gap: 10px;
+}
+
+/* Keep row height breathing with icon size */
+.ship-grid-row {
+  min-height: calc(var(--ship-icon, 72px) + 12px);
+}
+
+.ship-grid-header {
+  padding: 6px 8px;
+  border: 1px solid #25314a;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #0f1420, #0e1626);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .3px;
+}
+
+/* Column headers that need centered content */
+.ship-col--center { text-align: center; }
+
+/* Cell helper for select + gear alignment */
+.cell-gear {
+  display: grid;
+  grid-template-columns: 1fr 28px;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Ensure the chip truncates neatly in its column */
+.ship-chip.ellipsis {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tighten icon buttons inside grid */
+.ship-actions .icon-btn { width: 28px; height: 28px; }
+
+/* On very narrow viewports, allow affix/behavior to compress a bit */
+@media (max-width: 1100px) {
+  :root {
+    --col-affix:  240px;
+    --col-behav:  280px;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────
+   Incidents Card: Column Grid Alignment
+   ────────────────────────────────────────────────────────── */
+:root{
+  --inc-col-drag:   28px;
+  --inc-col-chance: 120px;
+  --inc-col-script: 1.10fr;
+  --inc-col-label:  0.90fr;
+  --inc-col-delay:  100px;
+  --inc-col-opts:   1.20fr;
+  --inc-col-act:    32px;
+
+  --inc-cols:
+    var(--inc-col-drag)
+    var(--inc-col-chance)
+    var(--inc-col-script)
+    var(--inc-col-label)
+    var(--inc-col-delay)
+    var(--inc-col-opts)
+    var(--inc-col-act)
+    var(--inc-col-act)
+    var(--inc-col-act);
+}
+
+.inc-grid-header,
+.inc-grid-row {
+  display: grid;
+  grid-template-columns: var(--inc-cols);
+  align-items: center;
+  gap: 10px;
+}
+
+.inc-grid-header {
+  padding: 6px 8px;
+  border: 1px solid #25314a;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #0f1420, #0e1626);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .3px;
+}
+
+.inc-grid-row { min-height: 44px; }
+.inc-grid-row .right { text-align: right; }

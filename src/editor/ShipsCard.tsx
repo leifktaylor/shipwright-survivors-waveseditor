@@ -5,7 +5,7 @@ import { useStore } from '@/state/store';
 import type { WaveShipEntryJSON } from '@/types/WaveJSON';
 import ShipIcon from '@/preview/ShipIcon';
 
-const ICON_SIZE = 72; // ~50% larger preview
+const ICON_SIZE = 72; // Preview canvas size (CSS var controls box)
 
 function ShipRow({
   wi, si, row,
@@ -39,44 +39,36 @@ function ShipRow({
   const openPicker = () => openShipPicker(wi, si);
 
   return (
-    <div className="row" style={{ gap: 10, alignItems: 'center' }} onDragOver={onDragOver} onDrop={onDrop}>
-      {/* Ship preview icon (click to choose) */}
+    <div className="ship-grid-row" onDragOver={onDragOver} onDrop={onDrop}>
+      {/* Preview */}
       {row.shipId ? (
         <div onClick={openPicker} style={{ cursor: 'pointer' }} title={`Change ship (${row.shipId})`}>
           <ShipIcon shipId={row.shipId} size={ICON_SIZE} title={row.shipId} />
         </div>
       ) : (
         <div
-          className="ship-icon placeholder"
+          className="ship-icon skeleton"
           onClick={openPicker}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openPicker()}
           title="Choose ship…"
-          style={{
-            width: ICON_SIZE, height: ICON_SIZE, display: 'grid', placeItems: 'center',
-            border: '1px dashed #25314a', borderRadius: 8, color: '#b9c4d6', cursor: 'pointer',
-            background: '#0f1420',
-          }}
-        >
-          ?
-        </div>
+          aria-label="Choose ship"
+        />
       )}
 
+      {/* Drag handle */}
       <div
         className="handle"
         title="Drag to reorder"
         draggable
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
-        style={{ fontSize: 18, lineHeight: 1 }}
-      >
-        ⋮
-      </div>
+      >⋮</div>
 
-      {/* Non-editable ship pill; opens ship picker */}
+      {/* Ship id pill (opens picker) */}
       <button
-        className="chip"
+        className="chip ship-chip ellipsis"
         onClick={openPicker}
         title={row.shipId ? row.shipId : 'Choose ship…'}
         aria-label="Choose ship"
@@ -84,32 +76,33 @@ function ShipRow({
         {row.shipId || 'Choose ship…'}
       </button>
 
-      <label className="row" style={{ gap: 6 }}>
-        count
-        <input
-          type="number"
-          value={row.count}
-          onChange={e => updateShip(wi, si, { count: Math.max(1, Number(e.target.value || 1)) })}
-          style={{ width: 80 }}
-        />
-      </label>
+      {/* Count */}
+      <input
+        type="number"
+        value={row.count}
+        onChange={e => updateShip(wi, si, { count: Math.max(1, Number(e.target.value || 1)) })}
+        style={{ width: 96 }}
+        aria-label="Count"
+        title="Count"
+      />
 
-      <label className="row" style={{ gap: 6 }}>
+      {/* Hunter (centered) */}
+      <div className="ship-col--center">
         <input
           type="checkbox"
           checked={row.hunter ?? true}
           onChange={e => updateShip(wi, si, { hunter: e.target.checked })}
+          title="Hunter"
+          aria-label="Hunter"
         />
-        hunter
-      </label>
+      </div>
 
-      {/* Affix select + single manage button */}
-      <div className="row" style={{ gap: 6 }}>
-        <label>affix</label>
+      {/* Affix (select + gear) */}
+      <div className="cell-gear">
         <select
           value={row.affixesRef ?? ''}
           onChange={e => updateShip(wi, si, { affixesRef: e.target.value || undefined, affixes: undefined })}
-          style={{ minWidth: 140 }}
+          title="Affix"
         >
           <option value="">(none)</option>
           {affixKeys.map(k => <option key={k} value={k}>{k}</option>)}
@@ -119,18 +112,15 @@ function ShipRow({
           title="Open Affixes"
           aria-label="Open Affixes"
           onClick={openAffixesModal}
-        >
-          ⚙
-        </button>
+        >⚙</button>
       </div>
 
-      {/* Behavior select + single manage button */}
-      <div className="row" style={{ gap: 6 }}>
-        <label>behavior</label>
+      {/* Behavior (select + gear) */}
+      <div className="cell-gear">
         <select
           value={row.behaviorRef ?? ''}
           onChange={e => updateShip(wi, si, { behaviorRef: e.target.value || undefined, behavior: undefined })}
-          style={{ minWidth: 160 }}
+          title="Behavior"
         >
           <option value="">(none)</option>
           {behaviorKeys.map(k => <option key={k} value={k}>{k}</option>)}
@@ -140,15 +130,21 @@ function ShipRow({
           title="Open Behaviors"
           aria-label="Open Behaviors"
           onClick={openBehaviorsModal}
-        >
-          ⚙
-        </button>
+        >⚙</button>
       </div>
 
-      <div className="spacer" />
+      {/* Flexible spacer to consume slack */}
+      <div />
 
-      <button className="btn-ghost" title="Duplicate" onClick={() => duplicateShip(wi, si)}>⧉</button>
-      <button className="icon-btn btn-danger" title="Delete" onClick={() => deleteShip(wi, si)}>✕</button>
+      {/* Actions */}
+      <div className="ship-actions">
+        <button className="btn-ghost icon-btn" title="Duplicate" aria-label="Duplicate"
+          onClick={() => duplicateShip(wi, si)}>⧉</button>
+      </div>
+      <div className="ship-actions">
+        <button className="icon-btn btn-danger" title="Delete" aria-label="Delete"
+          onClick={() => deleteShip(wi, si)}>✕</button>
+      </div>
     </div>
   );
 }
@@ -172,7 +168,21 @@ export default function ShipsCard() {
         </div>
       </div>
 
-      {/* Scrollable list */}
+      {/* Column headers (stay above the scroll region for usability) */}
+      <div className="ship-grid-header">
+        <div>Preview</div>
+        <div className="ship-col--center"></div>
+        <div>Ship</div>
+        <div>Count</div>
+        <div className="ship-col--center">Hunter</div>
+        <div>Affix</div>
+        <div>Behavior</div>
+        <div /> {/* spacer */}
+        <div className="right">Actions</div>
+        <div />
+      </div>
+
+      {/* Scrollable body */}
       <div className="card-scroll">
         <div className="col" style={{ gap: 10 }}>
           {w.ships.length === 0 && <div className="muted small">No ships yet. Use “+ Ship”.</div>}

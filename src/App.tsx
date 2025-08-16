@@ -8,10 +8,12 @@ import AffixesModal from '@/modals/AffixesModal';
 import BehaviorsModal from '@/modals/BehaviorsModal';
 import { preloadPreviewAssets } from './preview/shipPreview';
 import ShipPickerModal from '@/modals/ShipPickerModal';
+import IncidentsModal from '@/modals/IncidentsModal';
+
 
 export default function App() {
   useEffect(() => { preloadPreviewAssets(); }, []);
-  const { showAffixesModal, showBehaviorsModal, closeAffixesModal, closeBehaviorsModal } = useStore();
+  const { showAffixesModal, showBehaviorsModal, closeAffixesModal, closeBehaviorsModal, showIncidentsModal, closeIncidentsModal } = useStore();
 
   return (
     <div className="app-shell">
@@ -47,6 +49,14 @@ export default function App() {
         <div className="modal-backdrop" onClick={closeBehaviorsModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <BehaviorsModal onClose={closeBehaviorsModal} />
+          </div>
+        </div>
+      )}
+
+      {showIncidentsModal && (
+        <div className="modal-backdrop" onClick={closeIncidentsModal}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <IncidentsModal onClose={closeIncidentsModal} />
           </div>
         </div>
       )}

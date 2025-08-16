@@ -72,6 +72,11 @@ type Actions = {
   openBehaviorsModal: () => void;
   closeBehaviorsModal: () => void;
 
+  openIncidentsModal: (wi: number, ii: number | null) => void;
+  closeIncidentsModal: () => void;
+  showIncidentsModal: boolean;
+  incidentModalTarget: { wi: number; ii: number | null } | null;
+
   // ship picker modal
   openShipPicker: (wi: number, si: number) => void;
   closeShipPicker: () => void;
@@ -104,6 +109,12 @@ export const useStore = create<Store>((set, get) => ({
   setDoc: (doc) => set({ doc, selectedWaveIdx: doc.waves.length ? 0 : null, dirty: false }),
   setDirty: (v) => set({ dirty: v }),
   selectWave: (idx) => set({ selectedWaveIdx: idx }),
+
+  showIncidentsModal: false,
+  incidentModalTarget: null,
+
+  openIncidentsModal: (wi, ii) => set({ showIncidentsModal: true, incidentModalTarget: { wi, ii } }),
+  closeIncidentsModal: () => set({ showIncidentsModal: false, incidentModalTarget: null }),
 
   addWave: () => {
     const doc = structuredClone(get().doc);
