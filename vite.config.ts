@@ -35,33 +35,24 @@
 // vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { fileURLToPath, URL } from 'node:url';
+import path from 'node:path';
 
-const REPO_BASE = '/shipwright-survivors-waveseditor/'; // <— important for GH Pages
-
-export default defineConfig(({ mode }) => ({
-  // Serve from src/ so src/index.html is the entry
-  root: 'src',
-  // Expose top-level public/ at the server root
-  publicDir: '../public',
-  plugins: [react()],
-  resolve: {
-    // Absolute imports: import ... from '@/editor/ShipsCard'
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+export default defineConfig(({ mode }) => {
+  const isProd = mode === 'production';
+  return {
+    base: isProd ? '/shipwright-survivors-waveseditor/' : '/',
+    plugins: [react()],
+    publicDir: 'public',
+    resolve: {
+      alias: { '@': path.resolve(__dirname, 'src') },
     },
-  },
-  // IMPORTANT: base path for GitHub Pages
-  base: mode === 'production' ? REPO_BASE : '/',
-  server: {
-    port: 5174,
-    open: '/index.html',
-  },
-  preview: { port: 5174 },
-  build: {
-    outDir: '../dist',
-    emptyOutDir: true,
-    sourcemap: mode !== 'production',
-    target: 'es2020',
-  },
-}));
+    server: { port: 5174, open: '/' },
+    preview: { port: 5174 },
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
+      sourcemap: !isProd,
+      target: 'es2020',
+    },
+  };
+});
