@@ -35,24 +35,27 @@
 // vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'node:path';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig(({ mode }) => {
   const isProd = mode === 'production';
   return {
+    // root index.html at repo root
     base: isProd ? '/shipwright-survivors-waveseditor/' : '/',
     plugins: [react()],
     publicDir: 'public',
     resolve: {
-      alias: { '@': path.resolve(__dirname, 'src') },
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
     },
-    server: { port: 5174, open: '/' },
-    preview: { port: 5174 },
     build: {
       outDir: 'dist',
-      emptyOutDir: true,
       sourcemap: !isProd,
       target: 'es2020',
+      emptyOutDir: true,
     },
+    preview: { port: 5174 },
+    server: { port: 5174, open: '/' },
   };
 });
