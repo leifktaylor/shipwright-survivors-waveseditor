@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "build:manifest": "node scripts/build-ship-manifest.mjs"
+    "build:manifest": "node scripts/build-ship-manifest.mjs",
+    "postbuild": "cp dist/index.html dist/404.html"
   },
   "dependencies": {
     "react": "^18.3.1",
